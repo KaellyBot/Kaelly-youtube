@@ -1,6 +1,6 @@
 module github.com/kaellybot/kaelly-youtube
 
-go 1.20
+go 1.22
 
 // replace github.com/kaellybot/kaelly-amqp => ../kaelly-amqp
 

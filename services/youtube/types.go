@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	routingkey = "news.youtube"
+	Routingkey = "news.youtube"
 )
 
 type Service interface {

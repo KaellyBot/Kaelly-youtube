@@ -4,8 +4,8 @@ import "github.com/rs/zerolog"
 
 const (
 	LogFileName      = "fileName"
-	LogCorrelationId = "correlationId"
-	LogVideastId    = "videastId"
+	LogCorrelationID = "correlationID"
+	LogVideastID     = "videastID"
 
 	LogLevelFallback = zerolog.InfoLevel
 )

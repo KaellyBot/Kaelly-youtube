@@ -6,18 +6,17 @@ import (
 	"github.com/kaellybot/kaelly-youtube/repositories/videasts"
 	"github.com/kaellybot/kaelly-youtube/services/youtube"
 	"github.com/kaellybot/kaelly-youtube/utils/databases"
+	"github.com/kaellybot/kaelly-youtube/utils/insights"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
 func New() (*Impl, error) {
 	// misc
-	db, err := databases.New()
-	if err != nil {
-		return nil, err
-	}
-
 	broker := amqp.New(constants.RabbitMQClientID, viper.GetString(constants.RabbitMQAddress))
+	db := databases.New()
+	probes := insights.NewProbes(broker.IsConnected, db.IsConnected)
+	prom := insights.NewPrometheusMetrics()
 
 	// repositories
 	videastRepo := videasts.New(db)
@@ -31,10 +30,20 @@ func New() (*Impl, error) {
 	return &Impl{
 		youtubeService: youtubeService,
 		broker:         broker,
+		db:             db,
+		probes:         probes,
+		prom:           prom,
 	}, nil
 }
 
 func (app *Impl) Run() error {
+	app.probes.ListenAndServe()
+	app.prom.ListenAndServe()
+
+	if err := app.db.Run(); err != nil {
+		return err
+	}
+
 	if err := app.broker.Run(); err != nil {
 		return err
 	}
@@ -44,5 +53,8 @@ func (app *Impl) Run() error {
 
 func (app *Impl) Shutdown() {
 	app.broker.Shutdown()
+	app.db.Shutdown()
+	app.prom.Shutdown()
+	app.probes.Shutdown()
 	log.Info().Msgf("Application is no longer running")
 }
